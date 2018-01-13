@@ -1,4 +1,4 @@
-package main
+package atow
 
 type CharacterSheet struct {
 	Attributes struct {

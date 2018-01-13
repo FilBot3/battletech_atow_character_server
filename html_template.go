@@ -1,5 +1,5 @@
 //
-package main
+package atow
 
 var HtmlTemplate string = `<!DOCTYPE html>
 <html>

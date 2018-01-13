@@ -1,40 +1,38 @@
-package main
+package atow
 
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
-func checkerr(err error, message string) {
-	if err != nil {
-		fmt.Println(err)
-		log.Fatal(message)
-	}
-}
-
-func main() {
+func GenerateHtmlPage(character_name string) (bool, error) {
 	// Initalize an instance of the Character Sheet
 	var character_sheet CharacterSheet
 	// Slurp the JSON File into memory.
-	json_file, err := ioutil.ReadFile("example_character_sheets/AToW_RecordSheet.json")
+	json_file, err := ioutil.ReadFile(character_name)
 	// Check if we received an error, and print message.
-	checkerr(err, "Could not load file.")
+	if err != nil {
+		log.Println("Could not Read specified file")
+		return false, err
+	}
 	// Parse or Unmarshal the slurped file into the struct instance
 	err = json.Unmarshal(json_file, &character_sheet)
 	// Check for errors again.
-	checkerr(err, "Could not unmarshal JSON byte data.")
-	// Print our result. It'll look like junk because its mapped to the
-	// structure so there won't be any visible names.
-	//fmt.Println(character_sheet)
+	if err != nil {
+		log.Println("Could not unmarshal JSON data into byte string.")
+		return false, err
+	}
 
 	// Create a file to write to.
-	character_file, err := os.OpenFile("character_sheet.html", os.O_WRONLY|os.O_CREATE, 0666)
-	checkerr(err, "Unable to create file.")
+	character_file, err := os.OpenFile(character_name+".html", os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Println("Could not open file for writing, or could not be created.")
+		return false, err
+	}
 	defer character_file.Close()
 
 	// Make a buffer to put the text in.
@@ -43,8 +41,17 @@ func main() {
 	// Create a new Template.
 	template_example := template.New("BT AToW Example")
 	// Parse the Template String or File passed in.
+	// Loading HtmlTemplate from the html_template.go file.
 	template_example, err = template_example.Parse(HtmlTemplate)
+	if err != nil {
+		log.Println("Could not parse template")
+		return false, err
+	}
 	// Execute the template.
+	// This writes the template to the File buffer created earlier.
 	template_example.Execute(template_mem_buffer, character_sheet)
+	// Write the file to disk.
 	template_mem_buffer.Flush()
+
+	return true, nil
 }
